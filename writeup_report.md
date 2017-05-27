@@ -1,5 +1,3 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
 
 ---
 
@@ -15,12 +13,13 @@ The goals / steps of this project are the following:
 * Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/carvsnot.jpg
-[image2]: ./examples/hog.jpg
-[image3]: ./examples/windows.jpg
-[image4]: ./examples/heatmap.jpg
-[image5]: ./examples/labels.jpg
-[image6]: ./examples/finalpng
+[image1]: ./output_images/carvsnot.jpg
+[image2]: ./output_images/hog.jpg
+[image3]: ./output_images/windows.jpg
+[image4]: ./output_images/heatmap.jpg
+[image5]: ./output_images/labels.jpg
+[image6]: ./output_images/final.jpg
+[image7]: ./output_images/windows_scales.jpg
 [video1]: ./result.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -49,7 +48,7 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-Besides the hog features, in the extract_features function i also obtain spatial_features and histogram features. Spatial features are actually blocks of pixels unraveled in a vector. For the histogram features U take the histogram of each channel in the YCrCb color space and flatten them in a vector.
+Besides the hog features, in the extract_features function i also obtain spatial_features and histogram features. Spatial features are actually blocks of pixels unraveled in a vector. For the histogram features I take the histogram of each channel in the YCrCb color space and flatten them in a vector.
 
 The final configuration parameters for the extraction features were chosen through trial and error until I get a sufficiently high accuracy in the classifier.
 
@@ -77,39 +76,38 @@ hog_feat = True # HOG features on or off
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+I decided to use small, medium and large window size by varying the scale parameter given to the find_cars function from the lesson code. The hog features are only computed once, and then can be subsampled to get each overlaying window. Using smaller scales than 1.0 just adds more false positives. Here is a picture of the different scales of windows used and their positions:
+
+![alt text][image7]
+
+With these windows we can use the classifier to try and predict if cars are in the image. When the classifier predicts a car then we generate coordinates for boxes that enclose that prediction. Here is an example:
 
 ![alt text][image3]
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
-
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+False positives(like in the previous image) might be detected so in order to remove these outliers we need to implement a rejection mechanism. For each pixel inside the determined prediction we add the value 1 to a seperate heatmap image. Each time the pixel is found inside a box that the coresponding pixel in the heatmap gets "warmer". Using these method we can now select patches of the heatmap that have pixels with values above the threshold. For example here is the heatmap obtained by thresholding to 1:
 
 ![alt text][image4]
+
+Using the label function we can now separate detected instances in the heatmap. Here is an example image:
+
+![alt text][image5]
+
+Finally this allows is at the end to draw a rectangle around each found label, this being the definite detection of the pipeline. Here is an example image:
+
+![alt text][image6]
+
+
 ---
 
 ### Video Implementation
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./result.mp4)
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
-
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
-
-### Here are six frames and their corresponding heatmaps:
-
-![alt text][image5]
-
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
+The video implementation mostly follows the implementantion of the single image pipeline. In the video pipeline i decided to store the heatmaps from the last 10 frames in order to produce a smoother heatmap. This means that the boxes around the vehicles are less wobbly. The class CarDetector is used as storage instance for the detections and is passed as a parameter to the process_frame function. The features chosen seem to be working well for this video, the ammount of false positives being minimum.
 
 
 ---
@@ -118,5 +116,11 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I discovered that it is very important to have a balanced training set - relatively equal numbers of the two classes(car, non-car). I previously made a mistake when i built my training set and found that the pipeline detected a lot of false positives because of the class imbalances. 
 
+The chosen procedure seems to take a long time, 1 sec per iteration so it would definitely not work as-is in a real time environment. 
+
+I would optimize the scales for the windows chosen and their position. I believe this will allow the algorithm to run faster. Also the configuration parameters for the feature extraction could also be fiddled with to provide a faster execution with not too big of a loss in classification accuracy.
+More training samples can be added to the training set further generalizing the model and improving it's accuracy.
+
+But ultimately i believe this is still a pretty computationally intesive approach to run on a real-time feed. I suspect that a deep learning approach to identifying objects will run much faster and produce more accurate results. 
