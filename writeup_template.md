@@ -15,14 +15,13 @@ The goals / steps of this project are the following:
 * Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/car_not_car.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
+[image1]: ./examples/carvsnot.jpg
+[image2]: ./examples/hog.jpg
+[image3]: ./examples/windows.jpg
+[image4]: ./examples/heatmap.jpg
+[image5]: ./examples/labels.jpg
+[image6]: ./examples/finalpng
+[video1]: ./result.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -38,26 +37,41 @@ You're reading it!
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the "Prepare features". I use the get_hog_features to extract hog paraameters from a channel. Extracting the hog features from all channels of an image is a step in the extract_features function.
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
-
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
-
+Here is an example using the `YCrCb` color space and HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 ![alt text][image2]
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+Besides the hog features, in the extract_features function i also obtain spatial_features and histogram features. Spatial features are actually blocks of pixels unraveled in a vector. For the histogram features U take the histogram of each channel in the YCrCb color space and flatten them in a vector.
+
+The final configuration parameters for the extraction features were chosen through trial and error until I get a sufficiently high accuracy in the classifier.
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+I trained a linear SVM using the data provided by udacity which consists of both vehicles and non-vechicles. I took aside 10% of the samples for a test test set and trained the SVM on the training set. I obtained a Test Accuracy of SVC =  0.9887. The relevant code is in the "Prepare features" and "Train SVM" sections in the Jupyter notebook.
+
+The three types of features, spatial, hist and hog are concatenated together in a vector. Each image is processed and produces this kind of vector. Afterwards this is fed to the Sklearn SVM classifier.
+
+The configuration parameter for the feature extraction functions is:
+<pre>
+color_space = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+orient = 9  # HOG orientations
+pix_per_cell = 8 # HOG pixels per cell
+cell_per_block = 2 # HOG cells per block
+hog_channel = "ALL" # Can be 0, 1, 2, or "ALL"
+spatial_size = (32, 32) # Spatial binning dimensions
+hist_bins = 32    # Number of histogram bins
+spatial_feat = True # Spatial features on or off
+hist_feat = True # Histogram features on or off
+hog_feat = True # HOG features on or off
+</pre>
 
 ###Sliding Window Search
 
