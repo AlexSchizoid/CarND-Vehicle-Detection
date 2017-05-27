@@ -50,7 +50,7 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-Besides the hog features, in the extract_features function i also obtain spatial_features and histogram features. Spatial features are actually blocks of pixels unraveled in a vector. For the histogram features U take the histogram of each channel in the YCrCb color space and flatten them in a vector.
+Besides the hog features, in the extract_features function i also obtain spatial_features and histogram features. Spatial features are actually blocks of pixels unraveled in a vector. For the histogram features I take the histogram of each channel in the YCrCb color space and flatten them in a vector.
 
 The final configuration parameters for the extraction features were chosen through trial and error until I get a sufficiently high accuracy in the classifier.
 
@@ -86,7 +86,7 @@ With these windows we can use the classifier to try and predict if cars are in t
 
 ![alt text][image3]
 
-False positives might be detected so in order to remove these outliers we need to implement a rejection mechanism. For each pixel inside the determined prediction we add the value 1 to a seperate heatmap image. Each time the pixel is found inside a box that the coresponding pixel in the heatmap gets "warmer". Using these method we can now select patches of the heatmap that maps a threshold. For example here is the heatmap obtained by thresholding to 1:
+False positives(like in the previous image) might be detected so in order to remove these outliers we need to implement a rejection mechanism. For each pixel inside the determined prediction we add the value 1 to a seperate heatmap image. Each time the pixel is found inside a box that the coresponding pixel in the heatmap gets "warmer". Using these method we can now select patches of the heatmap that have pixels with values above the threshold. For example here is the heatmap obtained by thresholding to 1:
 
 ![alt text][image4]
 
@@ -118,11 +118,11 @@ The video implementation mostly follows the implementantion of the single image 
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-I discovered that it is very important to have a balanced training set - relatively equal numbers of the two classes(car, non-car). I previously made a mistake when i build my training set and found that the pipeline detected a lot of false positives. 
+I discovered that it is very important to have a balanced training set - relatively equal numbers of the two classes(car, non-car). I previously made a mistake when i built my training set and found that the pipeline detected a lot of false positives because of the class imbalances. 
 
 The chosen procedure seems to take a long time, 1 sec per iteration so it would definitely not work as-is in a real time environment. 
 
-I would optimize the scales for the windows chosen and their position. I believe this will allow the algorithm to run faster. Also the configuration parameters for the feature extraction could also be fiddled with to provide a faster execution with not to big of a loss in classification accuracy.
+I would optimize the scales for the windows chosen and their position. I believe this will allow the algorithm to run faster. Also the configuration parameters for the feature extraction could also be fiddled with to provide a faster execution with not too big of a loss in classification accuracy.
 More training samples can be added to the training set further generalizing the model and improving it's accuracy.
 
 But ultimately i believe this is still a pretty computationally intesive approach to run on a real-time feed. I suspect that a deep learning approach to identifying objects will run much faster and produce more accurate results. 
